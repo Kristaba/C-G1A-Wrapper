@@ -11,16 +11,22 @@
 
 #define BUFFER_SIZE 1024
 
+// Print c_g1awrapper usage into stdout
+// programName is the name of this binary program (argv[0])
+void printUsage(const char *programName);
+
 int main(int argc, char **argv) {
 	struct G1A_Header header;
 
 	char *imgFileName;
 	char *binFileName;
 	char *g1aFileName;
+	char *name;
+	char *version;
 
 	int tmp;
 	int previewIcon = 0;
-	int g1aNameProvided, imgNameProvided;
+	int g1aNameProvided, imgNameProvided, nameProvided, versionProvided;
 	int error;
 	int i;
 	int binSize;
@@ -29,17 +35,24 @@ int main(int argc, char **argv) {
 
 	FILE *img_f = NULL, *g1a_f = NULL, *bin_f = NULL;
 
-	printf("-- c_g1awrapper Copyright (C) 2008 Andreas Bertheussen, 2011 Leo Grange.\n");
+	printf("-- g1awrapper : 2008 Andreas Bertheussen, 2011 Leo Grange.\n");
 	memset(&header, 0, sizeof(struct G1A_Header)); // init header struct
 
 	// default file names :
 	imgFileName = "icon.bmp";
 	g1aFileName = "output.g1a";
 
+	if(argc >= 2 && (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))) {
+		printUsage(argv[0]);
+		return 0;
+	}
+	
 	error = 0;
 	i = 2;
 	g1aNameProvided = 0;
 	imgNameProvided = 0;
+	versionProvided = 0;
+	nameProvided = 0;
 	while(!error && i<argc) {
 		if(!strcmp(argv[i], "-o") || !strcmp(argv[i], "--output")) {
 			if(i+1 < argc) g1aFileName = argv[i+1];
@@ -55,18 +68,26 @@ int main(int argc, char **argv) {
 			previewIcon = 1;
 			i+=1;
 		}
+		else if(!strcmp(argv[i], "-n") || !strcmp(argv[i], "--name")) {
+			nameProvided = 1;
+			name = argv[i+1];
+			i+=2;
+		}
+		else if(!strcmp(argv[i], "-v") || !strcmp(argv[i], "--version-string")) {
+			versionProvided = 1;
+			version = argv[i+1];
+			i+=2;
+		}
+		else if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
+			printUsage(argv[0]);
+			return 0;
+		}
 		else error = 1;
 		if(i>argc) error = 1;
 	}
 
 	if(error || argc<2) {
-		printf("Usage: %s <bin_filename> [OPTION]...\n"
-				"Options are :\n"
-				"\t-o --output <g1a filename>\n"
-				"\t-i --icon <icon filename>\n"
-				"\t-p --preview-icon\n",
-				argv[0]);
-
+		printUsage(argv[0]);
 		return -1;
 	}
 
@@ -132,19 +153,23 @@ int main(int argc, char **argv) {
 	header.checkbyte2 = lowbyte - 0xB8;
 	
 	header.name_start = '@';
-	// TODO use an other name here?
-	tmp = strlen(g1aFileName);
-	memcpy(header.filename, g1aFileName, tmp > sizeof(header.filename) ? sizeof(header.filename) : tmp);
+	if(!nameProvided) name = g1aFileName;
+	tmp = strlen(name);
+	memcpy(header.filename, name, tmp > sizeof(header.filename) ? sizeof(header.filename) : tmp);
 	header.estrip_count = 0;
-	memcpy(header.version, "fxSDK.1337", 10); // less important field, let's brand it
+	if(!versionProvided) memcpy(header.version, "fxSDK.1337", 10);
+	else {
+		memcpy(header.version, "0000000000", 10);
+		tmp = strlen(version);
+		memcpy(header.version, version, tmp > sizeof(header.version) ? sizeof(header.version) : tmp);
+	}
 
 	// TODO get the real date
 	//printf ("[I] Timestamp: %s\n", ?);
 	memcpy(header.date, "2011.1012.1200", sizeof(header.date));
 
-	// TODO use an other name here?
-	tmp = strlen(g1aFileName);
-	memcpy(header.name, g1aFileName, tmp > sizeof(header.filename) ? sizeof(header.filename) : tmp);
+	tmp = strlen(name);
+	memcpy(header.name, name, tmp > sizeof(header.name) ? sizeof(header.name) : tmp);
 	header.filesize = UINT32_TO_BIG_ENDIAN(binSize + 0x200); // include size of header
 	printf("[I] G1A size:  %d\n", binSize + 0x200);
 
@@ -174,4 +199,18 @@ int main(int argc, char **argv) {
 
 	printf(" OK.\n\n");
 	return 0;
+}
+
+
+
+void printUsage(const char *programName) {
+	printf("Usage: %s <bin_filename> [OPTION]...\n"
+		"Options are :\n"
+		"\t-o --output <g1a filename>\n"
+		"\t-i --icon <icon filename>\n"
+		"\t-v --version-string <version field>\n"
+		"\t-n --name <internal name>\n"
+		"\t-p --preview-icon\n"
+		"\t-h --help\n"
+		, programName);
 }
