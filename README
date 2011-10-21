@@ -1,0 +1,38 @@
+Std C G1A-Wrapper v1.0
+---------------------------
+
+c_g1awrapper is a tiny command line tool which add the Casio's G1A file
+header into a binary file, to see it as a Casio addin.
+This program is a portage of the g1awrapper written by Andreas Bertheussen,
+which is in C++/Qt. This one doesn't need any external library such as Qt,
+so it's smaller and easier to build and port than the original g1awrapper.
+
+
+--------------
+INSTALLATION
+--------------
+Linux and other UNIX with 'make'
+-------------------------------------
+* Download the master branch from github (zip archive or using git)
+* Execute following command into a terminal :
+make all
+make install
+* 'make install' need super user rights (using 'sudo' for instance)
+
+Windows
+------------
+For now, there is no facilities for Windows installation.
+Using mingw should work nice.
+
+
+-----------
+LICENSE
+-----------
+c_g1awrapper is a free software under the GNU GPL version 3 license, see the
+file LICENSE for more information about it.
+
+
+--------------
+AUTHORS
+--------------
+Léo Grange (Kristaba), contact : grangeleo(at)gmail(dot)com
