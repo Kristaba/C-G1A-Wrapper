@@ -19,11 +19,11 @@ int readBMP(struct BMP_File *bmp, FILE *file);
 
 // put the monochrome representation of a BMP file into the bitmap array
 // bitmap's size must be greater than or equal to the size needed (Casio representation)
-int getMonoBitmap(const struct BMP_File *bmp, unsigned char *bitmap);
+void getMonoBitmap(const struct BMP_File *bmp, unsigned char *bitmap);
 
 
 // Just for Fun : fill a file (stdout for example) with an ASCII representation of the icon!
-int printBitmap(FILE *stream, unsigned char *bitmap, int w, int h);
+void printBitmap(FILE *stream, unsigned char *bitmap, int w, int h);
 
 
 #endif //_BMP_UTILS_H

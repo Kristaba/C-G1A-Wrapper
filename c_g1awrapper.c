@@ -155,13 +155,13 @@ int main(int argc, char **argv) {
 	header.name_start = '@';
 	if(!nameProvided) name = g1aFileName;
 	tmp = strlen(name);
-	memcpy(header.filename, name, tmp > sizeof(header.filename) ? sizeof(header.filename) : tmp);
+	memcpy(header.filename, name, tmp > (int)sizeof(header.filename) ? (int)sizeof(header.filename) : tmp);
 	header.estrip_count = 0;
 	if(!versionProvided) memcpy(header.version, "fxSDK.1337", 10);
 	else {
 		memcpy(header.version, "0000000000", 10);
 		tmp = strlen(version);
-		memcpy(header.version, version, tmp > sizeof(header.version) ? sizeof(header.version) : tmp);
+		memcpy(header.version, version, tmp > (int)sizeof(header.version) ? (int)sizeof(header.version) : tmp);
 	}
 
 	// TODO get the real date
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
 	memcpy(header.date, "2011.1012.1200", sizeof(header.date));
 
 	tmp = strlen(name);
-	memcpy(header.name, name, tmp > sizeof(header.name) ? sizeof(header.name) : tmp);
+	memcpy(header.name, name, tmp > (int)sizeof(header.name) ? (int)sizeof(header.name) : tmp);
 	header.filesize = UINT32_TO_BIG_ENDIAN(binSize + 0x200); // include size of header
 	printf("[I] G1A size:  %d\n", binSize + 0x200);
 
@@ -187,7 +187,7 @@ int main(int argc, char **argv) {
 
 	int read;
 	while ((read = fread(buffer, sizeof(char), BUFFER_SIZE, bin_f)) > 0) {
-		if(fwrite(buffer, sizeof(char), read, g1a_f) != read) {
+		if((int)fwrite(buffer, sizeof(char), read, g1a_f) != read) {
 			printf("\n[E] Could not write to G1A. Exiting.");
 			return -1;
 		}

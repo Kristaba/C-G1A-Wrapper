@@ -75,7 +75,7 @@ int readBMP(struct BMP_File *bmp, FILE *file) {
 }
 
 
-int getMonoBitmap(const struct BMP_File *bmp, unsigned char *bitmap) {
+void getMonoBitmap(const struct BMP_File *bmp, unsigned char *bitmap) {
 	int i, j;
 	int lineSize = ((bmp->bitPerPixel * bmp->width - 1)/32 + 1)*4;
 	int bLineSize = (bmp->width -1)/8 + 1;
@@ -115,15 +115,12 @@ int getMonoBitmap(const struct BMP_File *bmp, unsigned char *bitmap) {
 }
 
 
-int printBitmap(FILE *stream, unsigned char *bitmap, int w, int h) {
+void printBitmap(FILE *stream, unsigned char *bitmap, int w, int h) {
 	int i, j;
 	int bLineSize = (w -1)/8 + 1;
-	int pixelInByte;
 
 	for(i=0; i<h; i++) {
 		for(j=0; j<w; j++) {
-			//pixelInByte 
-			//if(j+1 >= w) 
 			if(bitmap[bLineSize*i + j/8] & (0x1 << (7-(j%8)))) {
 				fputc('#', stream);
 				fputc('#', stream);
