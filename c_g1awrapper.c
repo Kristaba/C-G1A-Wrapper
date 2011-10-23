@@ -41,10 +41,12 @@ int main(int argc, char **argv) {
 	char *g1aFileName;
 	char *name;
 	char *version;
+	char *date;
+	char *internalName;
 
 	int tmp;
 	int previewIcon = 0;
-	int g1aNameProvided, imgNameProvided, nameProvided, versionProvided;
+	int g1aNameProvided, imgNameProvided, nameProvided, versionProvided, dateProvided, internalNameProvided;
 	int error;
 	int i;
 	int binSize;
@@ -71,6 +73,8 @@ int main(int argc, char **argv) {
 	imgNameProvided = 0;
 	versionProvided = 0;
 	nameProvided = 0;
+	dateProvided = 0;
+	internalNameProvided = 0;
 	while(!error && i<argc) {
 		if(!strcmp(argv[i], "-o") || !strcmp(argv[i], "--output")) {
 			if(i+1 < argc) g1aFileName = argv[i+1];
@@ -91,9 +95,19 @@ int main(int argc, char **argv) {
 			name = argv[i+1];
 			i+=2;
 		}
+		else if(!strcmp(argv[i], "-N") || !strcmp(argv[i], "--internal-name")) {
+			internalNameProvided = 1;
+			internalName = argv[i+1];
+			i+=2;
+		}
 		else if(!strcmp(argv[i], "-v") || !strcmp(argv[i], "--version-string")) {
 			versionProvided = 1;
 			version = argv[i+1];
+			i+=2;
+		}
+		else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--date-string")) {
+			dateProvided = 1;
+			date = argv[i+1];
 			i+=2;
 		}
 		else if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
@@ -128,10 +142,11 @@ int main(int argc, char **argv) {
 			if(tmp == -2) printf("[W] Unreconized BMP file. Icon will be BLANK.\n");
 			else printf("[W] Error when reading icon file. Icon will be BLANK.\n");
 		}
-		else if(bmp.width!=30 || bmp.height!=18) {
+		else if(bmp.width!=30 || (bmp.height!=18 && bmp.height != 19)) {
 			printf("[W] Bad icon size (%d*%d). Must be 30*18 pixel. Icon will be BLANK.\n", bmp.width, bmp.height);
 		}
 		else {
+			if(bmp.height == 19) bmp.height = 18; // to support 30*19 icons from the official SDK 
 			getMonoBitmap(&bmp, header.menu_icon);
 			if(previewIcon) printBitmap(stdout, header.menu_icon, 30, 18);
 			free(bmp.bitmap);
@@ -171,21 +186,27 @@ int main(int argc, char **argv) {
 	header.checkbyte2 = lowbyte - 0xB8;
 	
 	header.name_start = '@';
-	if(!nameProvided) name = g1aFileName;
-	tmp = strlen(name);
-	memcpy(header.filename, name, tmp > (int)sizeof(header.filename) ? (int)sizeof(header.filename) : tmp);
+	if(!internalNameProvided) {
+		if(!nameProvided) internalName = g1aFileName;
+		else internalName = name;
+	}	
+	tmp = strlen(internalName);
+	memcpy(header.filename, internalName, tmp > (int)sizeof(header.filename) ? (int)sizeof(header.filename) : tmp);
 	header.estrip_count = 0;
 	if(!versionProvided) memcpy(header.version, "fxSDK.1337", 10);
 	else {
-		memcpy(header.version, "0000000000", 10);
+		memcpy(header.version, "     .1337", 10);
 		tmp = strlen(version);
 		memcpy(header.version, version, tmp > (int)sizeof(header.version) ? (int)sizeof(header.version) : tmp);
 	}
 
 	// TODO get the real date
 	//printf ("[I] Timestamp: %s\n", ?);
-	memcpy(header.date, "2011.1012.1200", sizeof(header.date));
+	if(!dateProvided) date = "2011.1012.1200";
+	tmp = strlen(date);
+	memcpy(header.date, date, tmp > (int)sizeof(header.date) ? (int)sizeof(header.date) : tmp);
 
+	if(!nameProvided) name = g1aFileName;
 	tmp = strlen(name);
 	memcpy(header.name, name, tmp > (int)sizeof(header.name) ? (int)sizeof(header.name) : tmp);
 	header.filesize = UINT32_TO_BIG_ENDIAN(binSize + 0x200); // include size of header
@@ -224,11 +245,20 @@ int main(int argc, char **argv) {
 void printUsage(const char *programName) {
 	printf("Usage: %s <bin_filename> [OPTION]...\n"
 		"Options are :\n"
-		"\t-o --output <g1a filename>\n"
-		"\t-i --icon <icon filename>\n"
-		"\t-v --version-string <version field>\n"
-		"\t-n --name <internal name>\n"
-		"\t-p --preview-icon\n"
-		"\t-h --help\n"
+		"  -o, --output <g1a filename>      Name of the output file. Default is\n"
+		"                                    'output.g1a'.\n"
+		"  -i, --icon <icon filename>       Name of the icon file. Default is 'icon.bmp'.\n"
+		"  -v, --version-string <version>   String visible in 'VERSION' menu.\n"
+		"                                   5 characters are displayed.\n"
+		"  -d, --date-string <date>         Date of the build, not important.\n"
+		"                                   Format is 'yyyy.MMdd.hhmm'\n"
+		"  -n, --name <title name>          Title name, shown in 'VERSION' menu.\n"
+		"                                   8 characters used.\n"
+		"                                   Default is the g1a filename.\n"
+		"  -N, --name <internal name>       Internal name used by the OS.\n"
+		"                                   8 characters used, upper case is advisable.\n"
+		"                                   Default is the title name.\n"
+		"  -p, --preview-icon               Print an ASCII preview of the icon in stdout.\n"
+		"  -h, --help                       Display this help.\n"
 		, programName);
 }
