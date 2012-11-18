@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <time.h>
 
 
 #define UINT32_TO_BIG_ENDIAN(i) ((((i)&0xFF000000)>>24) + (((i)&0x00FF0000)>>8) + (((i)&0x0000FF00)<<8) + (((i)&0x000000FF)<<24))
@@ -50,6 +51,8 @@ int main(int argc, char **argv) {
 	int error;
 	int i;
 	int binSize;
+	time_t now_raw;
+	struct tm *now;
 
 	unsigned char buffer[BUFFER_SIZE];
 
@@ -200,9 +203,14 @@ int main(int argc, char **argv) {
 		memcpy(header.version, version, tmp > (int)sizeof(header.version) ? (int)sizeof(header.version) : tmp);
 	}
 
-	// TODO get the real date
-	//printf ("[I] Timestamp: %s\n", ?);
-	if(!dateProvided) date = "2011.1012.1200";
+
+	if(!dateProvided) {
+		time(&now_raw);
+		now = gmtime(&now_raw);
+		date = malloc(16);
+		strftime(date, 16, "%Y.%m%d.%H%M", now);
+	}
+	printf ("[I] Timestamp: %s\n", date);
 	tmp = strlen(date);
 	memcpy(header.date, date, tmp > (int)sizeof(header.date) ? (int)sizeof(header.date) : tmp);
 
